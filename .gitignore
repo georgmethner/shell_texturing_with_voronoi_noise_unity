@@ -61,6 +61,14 @@ sysinfo.txt
 *.unitypackage
 *.app
 
+# All Unity3D meta files
+*.meta
+# Except the bayer patterns
+!*bayer2.png.meta
+!*bayer4.png.meta
+!*bayer8.png.meta
+!*bayer16.png.meta
+
 # Crashlytics generated file
 crashlytics-build.properties
 

@@ -1,0 +1,53 @@
+﻿#pragma kernel CSMain
+
+float hash1(float n)
+{
+    return frac(sin(n) * 43758.5453);
+}
+
+float2 hash2(float2 p)
+{
+    p = float2(dot(p, float2(127.1, 311.7)), dot(p, float2(269.5, 183.3)));
+    return frac(sin(p) * 43758.5453);
+}
+
+// Credit: https://www.shadertoy.com/view/ldB3zc
+float4 voronoi(in float2 x, float w)
+{
+    float2 n = floor(x);
+    float2 f = frac(x);
+
+    float4 m = float4(8.0, 0.0, 0.0, 0.0);
+    for (int j = -2; j <= 2; j++)
+        for (int i = -2; i <= 2; i++)
+        {
+            float2 g = float2(float(i), float(j));
+            float2 o = hash2(n + g);
+
+            // distance to cell		
+            float d = length(g - f + o);
+
+            // cell color
+            float3 col = 0.5 + 0.5 * sin(hash1(dot(n + g, float2(7.0, 113.0))) * 2.5 + 3.5 + float3(2.0, 3.0, 0.0));
+            // in linear space
+            col = col * col;
+
+            // do the smooth min for colors and distances		
+            float h = smoothstep(-1.0, 1.0, (m.x - d) / w);
+            m.x = lerp(m.x, d, h) - h * (1.0 - h) * w / (1.0 + 3.0 * w); // distance
+            m.yzw = lerp(m.yzw, col, h) - h * (1.0 - h) * w / (1.0 + 3.0 * w); // color
+        }
+
+    return m;
+}
+
+
+RWTexture2D<float2> result;
+
+float size;
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    result[id.xy] = voronoi(id.xy * size, 0.2).xy;
+}
